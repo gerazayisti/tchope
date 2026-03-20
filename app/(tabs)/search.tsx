@@ -16,7 +16,7 @@ import type { Spiciness } from '@/types';
 const POPULAR_INGREDIENTS = ['Igname', 'Plantain', 'Manioc', 'Gombo', 'Ndolé', 'Arachides'];
 
 export default function SearchScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const recipes = useLocalizedRecipes();
   const { results, query, setQuery, filters, setFilters } = useSearch(recipes);
@@ -58,23 +58,25 @@ export default function SearchScreen() {
 
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 120, paddingHorizontal: 24, gap: 40 }}
-        showsVerticalScrollIndicator={false}>
-        {/* Search Input */}
-        <View style={{ position: 'relative' }}>
+        contentContainerStyle={{ paddingBottom: 120, gap: 32 }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
+
+        {/* Search Input - same style as home */}
+        <View style={{ marginHorizontal: 24, position: 'relative' }}>
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder={t('searchPlaceholder')}
             placeholderTextColor="rgba(92,91,91,0.6)"
+            autoFocus={false}
             style={{
               backgroundColor: colors.inputBg,
               borderRadius: 48,
-              paddingLeft: 56,
-              paddingRight: query ? 56 : 16,
-              paddingVertical: 20,
-              fontSize: 18,
-              fontWeight: '500',
+              paddingLeft: 48,
+              paddingRight: query ? 48 : 16,
+              paddingVertical: 18,
+              fontSize: 16,
               color: colors.text,
             }}
           />
@@ -82,19 +84,19 @@ export default function SearchScreen() {
             name="search-outline"
             size={18}
             color={colors.textSecondary}
-            style={{ position: 'absolute', left: 20, top: 23 }}
+            style={{ position: 'absolute', left: 16, top: 20 }}
           />
           {query ? (
             <TouchableOpacity
               onPress={() => setQuery('')}
-              style={{ position: 'absolute', right: 20, top: 20, padding: 2 }}>
+              style={{ position: 'absolute', right: 16, top: 18, padding: 2 }}>
               <Ionicons name="close-circle" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ) : null}
         </View>
 
-        {/* Quick Filters - Duration */}
-        <View style={{ gap: 16, overflow: 'hidden' }}>
+        {/* Quick Filters */}
+        <View style={{ gap: 12, paddingHorizontal: 24 }}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -116,7 +118,6 @@ export default function SearchScreen() {
             />
           </ScrollView>
 
-          {/* Spiciness */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -141,46 +142,41 @@ export default function SearchScreen() {
         </View>
 
         {/* Popular Ingredients */}
-        <View style={{ gap: 24 }}>
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: '800',
-              color: colors.text,
-              letterSpacing: -0.5,
-            }}>
-            {t('popularIngredients')}
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
-            {POPULAR_INGREDIENTS.map((ing) => (
-              <View key={ing} style={{ width: '30%' }}>
-                <IngredientItem
-                  name={ing}
-                  active={selectedIngredient === ing}
-                  onPress={() => handleIngredientFilter(ing)}
-                />
-              </View>
-            ))}
+        {!hasActiveFilters && (
+          <View style={{ gap: 24, paddingHorizontal: 24 }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: '800',
+                color: colors.text,
+                letterSpacing: -0.5,
+              }}>
+              {t('popularIngredients')}
+            </Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
+              {POPULAR_INGREDIENTS.map((ing) => (
+                <View key={ing} style={{ width: '30%' }}>
+                  <IngredientItem
+                    name={ing}
+                    active={selectedIngredient === ing}
+                    onPress={() => handleIngredientFilter(ing)}
+                  />
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Results */}
         {hasActiveFilters && (
-          <View style={{ gap: 24, paddingTop: 8 }}>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>
-                {t('results')}{' '}
-                <Text style={{ color: colors.accentOrange }}>({results.length})</Text>
-              </Text>
-            </View>
+          <View style={{ gap: 20, paddingHorizontal: 24 }}>
+            <Text style={{ fontSize: 20, fontWeight: '800', color: colors.text, letterSpacing: -0.5 }}>
+              {t('results')}{' '}
+              <Text style={{ color: colors.accentOrange }}>({results.length})</Text>
+            </Text>
 
             {results.length > 0 ? (
-              <View style={{ gap: 24 }}>
+              <View style={{ gap: 20 }}>
                 {results.map((recipe) => (
                   <SearchResultCard key={recipe.id} recipe={recipe} />
                 ))}

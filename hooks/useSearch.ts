@@ -7,9 +7,6 @@ type Filters = {
   ingredient?: string;
 };
 
-/**
- * Remove diacritics / accents for accent-insensitive matching.
- */
 function normalize(str: string): string {
   return str
     .toLowerCase()
@@ -39,8 +36,25 @@ function matchesText(recipe: Recipe, query: string): boolean {
     recipe.name,
     recipe.description,
     recipe.region,
+    recipe.id,
     ...(recipe.tags ?? []),
     ...recipe.ingredients.map((i) => i.name),
+    ...recipe.steps,
+  ];
+
+  return searchable.some((field) => normalize(field).includes(q));
+}
+
+function matchesIngredient(recipe: Recipe, ingredient: string): boolean {
+  if (!ingredient) return true;
+  const q = normalize(ingredient);
+
+  // Search in ingredient names, steps, description, and recipe name
+  const searchable = [
+    ...recipe.ingredients.map((i) => i.name),
+    ...recipe.steps,
+    recipe.description,
+    recipe.name,
   ];
 
   return searchable.some((field) => normalize(field).includes(q));
@@ -55,13 +69,7 @@ export function useSearch(recipes: Recipe[]) {
       if (!matchesText(recipe, query)) return false;
       if (!matchesDuration(recipe, filters.duration)) return false;
       if (filters.spiciness && recipe.spiciness !== filters.spiciness) return false;
-      if (filters.ingredient) {
-        const normalizedIngredient = normalize(filters.ingredient);
-        const hasIngredient = recipe.ingredients.some((i) =>
-          normalize(i.name).includes(normalizedIngredient),
-        );
-        if (!hasIngredient) return false;
-      }
+      if (filters.ingredient && !matchesIngredient(recipe, filters.ingredient)) return false;
       return true;
     });
   }, [recipes, query, filters]);
