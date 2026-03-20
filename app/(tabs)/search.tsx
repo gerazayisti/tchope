@@ -65,7 +65,7 @@ export default function SearchScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
       {/* Header */}
       <View style={{ paddingHorizontal: 24, paddingVertical: 16 }}>
-        <Text style={{ fontSize: 24, fontWeight: '600', color: colors.accent, letterSpacing: -1.2 }}>
+        <Text style={{ fontSize: 24, fontWeight: '800', color: colors.accent, letterSpacing: -1.2 }}>
           Tchopé
         </Text>
       </View>
@@ -74,7 +74,7 @@ export default function SearchScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 120, gap: 32 }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="always">
 
         {/* Search Input - same style as home */}
         <View style={{ marginHorizontal: 24, position: 'relative' }}>

@@ -365,7 +365,7 @@ export default function RecipeDetailScreen() {
                         width: 48,
                         height: 48,
                         borderRadius: 24,
-                        backgroundColor: index === 0 ? colors.accent : colors.accentOrange,
+                        backgroundColor: colors.accent,
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}>

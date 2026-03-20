@@ -60,7 +60,7 @@ export default function HomeScreen() {
           <Text
             style={{
               fontSize: 24,
-              fontWeight: '600',
+              fontWeight: '800',
               color: colors.accent,
               letterSpacing: -1.2,
             }}>
