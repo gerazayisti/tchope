@@ -62,6 +62,13 @@ export default function RecipeDetailScreen() {
     if (recipe.tips) {
       text += `\n💡 ASTUCE DU CHEF\n${recipe.tips}\n`;
     }
+    const videos = getRecipeVideos(recipe.id);
+    if (videos && videos.length > 0) {
+      text += `\n🎥 VIDÉOS\n`;
+      videos.forEach((v) => {
+        text += `  ▶ ${v.title}\n    https://youtube.com/watch?v=${v.id}\n`;
+      });
+    }
     text += `\n— Partagé via Tchopé 🇨🇲 by https://lndev.me`;
     return text;
   };
