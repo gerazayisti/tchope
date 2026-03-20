@@ -107,6 +107,46 @@ export const recipeVideos: Record<string, RecipeVideo[]> = {
     { id: 'DMNUwEY8TMk', title: 'Ntouba — Plantain pilé camerounais' },
     { id: 'eXK0D2t8uAc', title: 'Pilé de banane' },
   ],
+  'soya': [
+    { id: 'wI25CxenE7U', title: 'Brochettes de soya' },
+  ],
+  'poulet-braise': [
+    { id: 'J3iRK1jhca4', title: 'Poulet braisé à la camerounaise' },
+  ],
+  'porc-braise': [
+    { id: 'uc96J3NcVZQ', title: 'Porc braisé' },
+  ],
+  'haricots-en-sauce': [
+    { id: 'bZBZveENLZg', title: 'Haricots rouges en sauce' },
+    { id: 'MQLvLGxinEY', title: 'Haricots blancs à la sauce tomate' },
+  ],
+  'sauce-pistache': [
+    { id: 'Gcp9B54soNg', title: 'Sauce pistache / Graines de courge' },
+  ],
+  'folong-saute': [
+    { id: 'xlaUyBU-Pc8', title: "Folong à l'huile rouge" },
+    { id: 'IMv-f1c3Xqc', title: 'Folong aux arachides' },
+    { id: 'iaA6VobeXqw', title: 'Sauté de folong aux crevettes' },
+  ],
+  'escargots-sautes': [
+    { id: 'tx_IrlDyt8M', title: 'Escargots sautés' },
+    { id: 'Cxr2IGgV1rA', title: 'Escargots sautés — Douc\'eurs Du Palais' },
+  ],
+  'tenue-militaire': [
+    { id: 'XaFcgmMS04A', title: 'Tenue Militaire — Gâteau de maïs aux feuilles de macabo' },
+  ],
+  'ebandjea': [
+    { id: 'h_-IYGLD3Hc', title: 'Ebandjea — Poisson épicé de Kribi' },
+  ],
+  'choux-farcis': [
+    { id: 'BYVyZZM5V6o', title: 'Feuilles de chou farcies à la viande hachée' },
+  ],
+  'riz-jollof': [
+    { id: 'zIrnKjUtk_U', title: 'Recette facile du Riz Jollof' },
+  ],
+  'taro-sauce-jaune': [
+    { id: 'wI25CxenE7U', title: 'Taro sauce jaune / Achu soup' },
+  ],
 };
 
 // English language recipe videos
@@ -149,6 +189,9 @@ export const recipeVideosEn: Record<string, RecipeVideo[]> = {
   ],
   'banane-malaxee': [
     { id: 'Cx576pjqKSo', title: 'Topsi Banana / Banane Malaxée Recipe' },
+  ],
+  'riz-jollof': [
+    { id: 'MrwBvPT7EGA', title: 'Nigerian Jollof Rice — Chef Lola\'s Kitchen' },
   ],
 };
 
