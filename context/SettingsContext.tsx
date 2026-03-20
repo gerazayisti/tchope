@@ -7,7 +7,7 @@ const FAVORITES_KEY = 'tchope_favorites';
 const USER_RECIPES_KEY = 'tchope_user_recipes';
 
 const defaultSettings: Settings = {
-  theme: 'system',
+  theme: 'light',
   language: 'fr',
 };
 
