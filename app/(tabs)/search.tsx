@@ -69,7 +69,7 @@ export default function SearchScreen() {
             onChangeText={setQuery}
             placeholder={t('searchPlaceholder')}
             placeholderTextColor="rgba(92,91,91,0.6)"
-            autoFocus={false}
+            autoFocus
             style={{
               backgroundColor: colors.inputBg,
               borderRadius: 48,
