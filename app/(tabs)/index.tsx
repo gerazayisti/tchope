@@ -1,10 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -22,24 +17,33 @@ const ALL_REGIONS: Region[] = [
   'Est', 'Adamaoua', 'Extrême-Nord', 'Nord-Ouest', 'Sud-Ouest',
 ];
 
+const FEATURED_ORDER = [
+  'ndole', 'poulet-dg', 'eru', 'kondre', 'poisson-braise', 'koki', 'okok-sale',
+];
+
+const POPULAR_ORDER = [
+  'ndole', 'poulet-dg', 'eru', 'poisson-braise', 'kondre',
+  'mbongo-tchobi', 'koki', 'okok-sale', 'ekwang', 'soya',
+  'pepper-soup', 'beignets-farine', 'plantains-frits-epices',
+  'corn-tchap', 'njama-njama', 'kati-kati', 'banane-malaxee',
+  'ndomba', 'kilishi', 'sauce-pistache',
+];
+
 export default function HomeScreen() {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
   const { t } = useTranslation();
   const router = useRouter();
   const recipes = useLocalizedRecipes();
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
   const featuredRecipes = useMemo(
-    () => recipes.filter((r) => r.isFeatured),
-    [recipes]
+    () => FEATURED_ORDER.map((id) => recipes.find((r) => r.id === id)).filter(Boolean) as typeof recipes,
+    [recipes],
   );
 
-  const popularRecipes = useMemo(() => {
-    let filtered = selectedRegion
-      ? recipes.filter((r) => r.region === selectedRegion)
-      : recipes;
-    return filtered.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 10);
-  }, [selectedRegion, recipes]);
+  const popularRecipes = useMemo(
+    () => POPULAR_ORDER.map((id) => recipes.find((r) => r.id === id)).filter(Boolean).slice(0, 10) as typeof recipes,
+    [recipes],
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
@@ -109,7 +113,6 @@ export default function HomeScreen() {
               <RegionItem
                 key={region}
                 region={region}
-                active={selectedRegion === region}
                 onPress={() =>
                   router.push(`/recipes-list?region=${encodeURIComponent(region)}&title=${encodeURIComponent(region)}` as any)
                 }
