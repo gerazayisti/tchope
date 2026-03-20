@@ -1,50 +1,158 @@
-# Welcome to your Expo app 👋
+# Tchopé 🇨🇲
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Application mobile de recettes camerounaises. Découvrez, cuisinez et partagez les saveurs authentiques du Cameroun.
 
-## Get started
+## Fonctionnalités
 
-1. Install dependencies
+- **116+ recettes** camerounaises authentiques avec ingrédients et étapes détaillées
+- **Recherche avancée** par nom, ingrédient, durée, niveau de piment
+- **Filtres par région** (10 régions du Cameroun)
+- **Favoris** persistants (AsyncStorage)
+- **Cookbook personnel** — ajoutez vos propres recettes avec photo
+- **Timer de cuisson** avec bulle flottante et alerte à la fin
+- **Recettes en vidéo** — tutoriels YouTube intégrés pour 23+ plats
+- **Mode sombre** complet
+- **Bilingue** français / anglais (changement instantané)
+- **Partage de recettes** formatées (ingrédients + étapes)
 
-   ```bash
-   npm install
-   ```
+## Stack technique
 
-2. Start the app
+- **Expo SDK 54** (managed workflow)
+- **TypeScript**
+- **expo-router** v6 (file-based routing)
+- **NativeWind v5** (TailwindCSS pour React Native)
+- **expo-image** pour le chargement d'images
+- **expo-image-picker** pour l'ajout de photos
+- **AsyncStorage** pour la persistance locale
+- **expo-haptics** pour le retour haptique
 
-   ```bash
-   npx expo start
-   ```
+## Structure du projet
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+app/
+  _layout.tsx              → Layout racine (providers)
+  (tabs)/
+    _layout.tsx            → Tab bar (4 onglets)
+    index.tsx              → Accueil
+    search.tsx             → Recherche
+    cookbook.tsx            → Mon Cookbook
+    settings.tsx           → Paramètres
+  recipe/[id].tsx          → Détail recette
+  add-recipe.tsx           → Ajouter une recette
+  recipe-videos.tsx        → Vidéos YouTube
+  recipes-list.tsx         → Liste filtrée (région / toutes)
+components/                → Composants réutilisables
+constants/
+  translations.ts          → i18n FR/EN
+  images.ts                → Mapping images (Wikimedia Commons)
+  videos.ts                → Mapping vidéos YouTube
+context/
+  SettingsContext.tsx       → Thème + langue
+  TimerContext.tsx          → Timer de cuisson flottant
+  ToastContext.tsx          → Toasts visuels
+data/
+  recipes.ts               → 116 recettes parsées
+hooks/                     → Hooks personnalisés
+types/                     → Types TypeScript
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Lancer en développement
 
-## Learn more
+```bash
+# Installer les dépendances
+npm install
 
-To learn more about developing your project with Expo, look at the following resources:
+# Lancer le serveur de développement
+npx expo start
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Scanner le QR code avec Expo Go (iOS/Android)
+```
 
-## Join the community
+## Build pour les stores
 
-Join our community of developers creating universal apps.
+### Prérequis
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1. Installer EAS CLI :
+```bash
+npm install -g eas-cli
+```
+
+2. Se connecter à son compte Expo :
+```bash
+eas login
+```
+
+3. Configurer le projet (une seule fois) :
+```bash
+eas build:configure
+```
+
+### Build iOS (App Store)
+
+```bash
+# Build de production pour iOS
+eas build --platform ios --profile production
+
+# Soumettre sur l'App Store
+eas submit --platform ios
+```
+
+> **Note :** Un compte Apple Developer (99$/an) est requis.
+
+### Build Android (Google Play)
+
+```bash
+# Build de production pour Android (AAB)
+eas build --platform android --profile production
+
+# Soumettre sur le Google Play Store
+eas submit --platform android
+```
+
+> **Note :** Un compte Google Play Developer (25$ one-time) est requis.
+
+### Build les deux plateformes
+
+```bash
+eas build --platform all --profile production
+```
+
+### Configuration `eas.json`
+
+Créez `eas.json` à la racine si absent :
+
+```json
+{
+  "cli": {
+    "version": ">= 3.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {}
+  },
+  "submit": {
+    "production": {}
+  }
+}
+```
+
+### Build de développement (recommandé pour tester les modules natifs)
+
+```bash
+eas build --platform ios --profile development
+eas build --platform android --profile development
+```
+
+## Auteur
+
+**Leonel Ngoya** — [lndev.me](https://lndev.me)
+
+## Licence
+
+Projet privé — © 2025 Leonel Ngoya

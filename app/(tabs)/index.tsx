@@ -1,98 +1,181 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { useTheme } from '@/hooks/useTheme';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLocalizedRecipes } from '@/hooks/useLocalizedRecipes';
+import FeaturedCard from '@/components/FeaturedCard';
+import RecipeCard from '@/components/RecipeCard';
+import RegionItem from '@/components/RegionItem';
+import type { Region } from '@/types';
+
+const ALL_REGIONS: Region[] = [
+  'Littoral', 'Ouest', 'Centre', 'Sud', 'Nord',
+  'Est', 'Adamaoua', 'Extrême-Nord', 'Nord-Ouest', 'Sud-Ouest',
+];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const { colors, isDark } = useTheme();
+  const { t } = useTranslation();
+  const router = useRouter();
+  const recipes = useLocalizedRecipes();
+  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const featuredRecipes = useMemo(
+    () => recipes.filter((r) => r.isFeatured),
+    [recipes]
+  );
+
+  const popularRecipes = useMemo(() => {
+    let filtered = selectedRegion
+      ? recipes.filter((r) => r.region === selectedRegion)
+      : recipes;
+    return filtered.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 10);
+  }, [selectedRegion, recipes]);
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }} edges={['top']}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View
+          style={{
+            paddingHorizontal: 24,
+            paddingVertical: 16,
+          }}>
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: '600',
+              color: colors.accent,
+              letterSpacing: -1.2,
+            }}>
+            Tchopé
+          </Text>
+        </View>
+
+        {/* Search Bar */}
+        <TouchableOpacity
+          onPress={() => router.push('/(tabs)/search')}
+          activeOpacity={0.8}
+          style={{
+            marginHorizontal: 24,
+            backgroundColor: colors.inputBg,
+            borderRadius: 48,
+            paddingLeft: 48,
+            paddingRight: 16,
+            paddingVertical: 18,
+            position: 'relative',
+          }}>
+          <Ionicons
+            name="search-outline"
+            size={18}
+            color={colors.textSecondary}
+            style={{ position: 'absolute', left: 16, top: 20 }}
+          />
+          <Text style={{ fontSize: 16, color: 'rgba(92,91,91,0.6)' }}>
+            {t('searchPlaceholder')}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Regions Section */}
+        <View style={{ paddingVertical: 16, gap: 16 }}>
+          <View style={{ paddingHorizontal: 24 }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: colors.text,
+                letterSpacing: -0.5,
+              }}>
+              {t('regions')}
+            </Text>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 24, gap: 16 }}>
+            {ALL_REGIONS.map((region) => (
+              <RegionItem
+                key={region}
+                region={region}
+                active={selectedRegion === region}
+                onPress={() =>
+                  router.push(`/recipes-list?region=${encodeURIComponent(region)}&title=${encodeURIComponent(region)}` as any)
+                }
+              />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Featured Recipes Section */}
+        <View style={{ paddingVertical: 16, gap: 24 }}>
+          <View style={{ paddingHorizontal: 24 }}>
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: '800',
+                color: colors.text,
+                letterSpacing: -0.6,
+              }}>
+              {t('featuredRecipes')}
+            </Text>
+          </View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingLeft: 24 }}>
+            {featuredRecipes.map((recipe) => (
+              <FeaturedCard key={recipe.id} recipe={recipe} />
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Popular Recipes Section */}
+        <View style={{ paddingVertical: 16, gap: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: 24,
+            }}>
+            <Text
+              style={{
+                fontSize: 20,
+                fontWeight: '700',
+                color: colors.text,
+              }}>
+              {t('popularRecipes')}
+            </Text>
+            <TouchableOpacity onPress={() => router.push(`/recipes-list?title=${encodeURIComponent(t('allRecipes'))}` as any)}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: colors.accent,
+                }}>
+                {t('seeAll')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={{ paddingHorizontal: 24, gap: 16 }}>
+            {popularRecipes.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
