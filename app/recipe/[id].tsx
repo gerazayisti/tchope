@@ -69,7 +69,7 @@ export default function RecipeDetailScreen() {
         text += `  ▶ ${v.title}\n    https://youtube.com/watch?v=${v.id}\n`;
       });
     }
-    text += `\n— Partagé via Tchopé 🇨🇲 by https://lndev.me`;
+    text += `\n— Partagé via Tchopé 🇨🇲 by https://tchope.lndev.me`;
     return text;
   };
 
