@@ -29,7 +29,7 @@ export default function RecipeVideosScreen() {
   }, [recipeId, lang]);
 
   const openVideo = (videoId: string) => {
-    WebBrowser.openBrowserAsync(`https://www.youtube.com/watch?v=${videoId}`);
+    WebBrowser.openBrowserAsync(`https://www.youtube.com/watch?v=${videoId}&utm_source=tchope&utm_medium=app&utm_campaign=recipe_video`);
   };
 
   return (
