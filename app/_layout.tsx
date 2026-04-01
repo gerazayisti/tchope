@@ -9,6 +9,7 @@ import { FavoritesProvider } from '@/context/FavoritesContext';
 import { UserRecipesProvider } from '@/context/UserRecipesContext';
 import { TimerProvider } from '@/context/TimerContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { ShoppingProvider } from '@/context/ShoppingContext';
 import { useTheme } from '@/hooks/useTheme';
 
 export const unstable_settings = {
@@ -42,9 +43,11 @@ export default function RootLayout() {
       <FavoritesProvider>
         <UserRecipesProvider>
           <ToastProvider>
-            <TimerProvider>
-              <InnerLayout />
-            </TimerProvider>
+            <ShoppingProvider>
+              <TimerProvider>
+                <InnerLayout />
+              </TimerProvider>
+            </ShoppingProvider>
           </ToastProvider>
         </UserRecipesProvider>
       </FavoritesProvider>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import Fuse from 'fuse.js';
 import type { Recipe, Spiciness } from '@/types';
 
 type Filters = {
@@ -64,15 +65,36 @@ export function useSearch(recipes: Recipe[]) {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>({});
 
+  const fuse = useMemo(
+    () =>
+      new Fuse(recipes, {
+        keys: [
+          { name: 'name', weight: 2 },
+          { name: 'description', weight: 1 },
+          { name: 'ingredients.name', weight: 1.5 },
+          { name: 'region', weight: 0.5 },
+          { name: 'tags', weight: 1 },
+        ],
+        threshold: 0.35,
+        ignoreLocation: true,
+      }),
+    [recipes]
+  );
+
   const results = useMemo(() => {
-    return recipes.filter((recipe) => {
-      if (!matchesText(recipe, query)) return false;
-      if (!matchesDuration(recipe, filters.duration)) return false;
+    let filtered = recipes;
+
+    if (query.trim()) {
+      filtered = fuse.search(query).map((res) => res.item);
+    }
+
+    return filtered.filter((recipe) => {
+      if (filters.duration && !matchesDuration(recipe, filters.duration)) return false;
       if (filters.spiciness && recipe.spiciness !== filters.spiciness) return false;
       if (filters.ingredient && !matchesIngredient(recipe, filters.ingredient)) return false;
       return true;
     });
-  }, [recipes, query, filters]);
+  }, [fuse, query, filters]);
 
   return { results, query, setQuery, filters, setFilters };
 }

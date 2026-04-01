@@ -4,6 +4,7 @@ export const translations = {
     tabHome: "Accueil",
     tabSearch: "Rechercher",
     tabCookbook: "Cookbook",
+    tabShopping: "Courses",
     tabSettings: "Paramètres",
 
     // Home
@@ -174,6 +175,18 @@ export const translations = {
     favorites: "Favoris",
     myRecipes: "Mes Recettes",
     recipes: "Recettes",
+    shoppingListTitle: "Liste de courses",
+    addToShopping: "Tout ajouter aux courses",
+    clearShopping: "Vider la liste",
+    noShoppingItems: "Votre liste est vide",
+    noShoppingSubtitle: "Ajoutez des ingrédients depuis une recette pour les retrouver ici",
+    voiceControl: "Commande Vocale",
+    voiceListen: "Écoute...",
+    voiceNext: "Suivant",
+    voicePrev: "Précédent",
+    voiceStop: "Arrêter",
+    handsFreeMode: "Mode Mains Sales",
+    shakeToNext: "Secouez pour suivant",
   },
 
   en: {
@@ -181,6 +194,7 @@ export const translations = {
     tabHome: "Home",
     tabSearch: "Search",
     tabCookbook: "Cookbook",
+    tabShopping: "Shopping",
     tabSettings: "Settings",
 
     // Home
@@ -350,6 +364,18 @@ export const translations = {
     favorites: "Favorites",
     myRecipes: "My Recipes",
     recipes: "Recipes",
+    shoppingListTitle: "Shopping List",
+    addToShopping: "Add all to shopping",
+    clearShopping: "Clear list",
+    noShoppingItems: "Your list is empty",
+    noShoppingSubtitle: "Add ingredients from a recipe to find them here",
+    voiceControl: "Voice Control",
+    voiceListen: "Listening...",
+    voiceNext: "Next",
+    voicePrev: "Previous",
+    voiceStop: "Stop",
+    handsFreeMode: "Hands-Free Mode",
+    shakeToNext: "Shake for next step",
   },
 } as const;
 

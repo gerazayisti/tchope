@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Share } from 'react-native';
 import * as ClipboardModule from 'expo-clipboard';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +12,11 @@ import { useToast } from '@/hooks/useToast';
 import { useTimer } from '@/context/TimerContext';
 import { useLocalizedRecipes } from '@/hooks/useLocalizedRecipes';
 import { useUserRecipes } from '@/hooks/useUserRecipes';
+import { useShopping } from '@/context/ShoppingContext';
+import { useVoiceControl } from '@/hooks/useVoiceControl';
+import { useShakeGesture } from '@/hooks/useShakeGesture';
 import { getRecipeVideos } from '@/constants/videos';
+import * as Speech from 'expo-speech';
 import RecipeImage from '@/components/RecipeImage';
 
 type Tab = 'ingredients' | 'steps';
@@ -26,13 +30,25 @@ export default function RecipeDetailScreen() {
   const { toast } = useToast();
   const { startTimer, isTimerRunning } = useTimer();
   const { userRecipes } = useUserRecipes();
+  const { addItems } = useShopping();
   const recipes = useLocalizedRecipes();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('ingredients');
+  const [servings, setServings] = useState<number>(0);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [isHandsFreeActive, setIsHandsFreeActive] = useState(false);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
   const recipe = useMemo(() => {
     return recipes.find((r) => r.id === id) ?? userRecipes.find((r) => r.id === id);
   }, [id, userRecipes, recipes]);
+
+  useEffect(() => {
+    if (recipe && servings === 0) {
+      setServings(recipe.servings);
+    }
+  }, [recipe, servings]);
 
   if (!recipe) {
     return (
@@ -92,6 +108,111 @@ export default function RecipeDetailScreen() {
     startTimer(recipe.name, recipe.duration);
     toast(`Timer lancé : ${recipe.duration} min`, 'done');
   };
+
+  const handleAddToShopping = () => {
+    const itemsToAdd = scaledIngredients.map((ing: { name: string; quantity: string }) => ({
+      name: ing.name,
+      quantity: ing.quantity,
+      recipeName: recipe.name,
+    }));
+    addItems(itemsToAdd);
+    toast('Articles ajoutés au panier', 'done');
+  };
+
+  const handleNextStep = useCallback(() => {
+    if (currentStepIndex < recipe.steps.length - 1) {
+      const next = currentStepIndex + 1;
+      setCurrentStepIndex(next);
+      speakStep(recipe.steps[next], next);
+    }
+  }, [currentStepIndex, recipe.steps, completedSteps]);
+
+  const handlePrevStep = useCallback(() => {
+    if (currentStepIndex > 0) {
+      const prev = currentStepIndex - 1;
+      setCurrentStepIndex(prev);
+      speakStep(recipe.steps[prev], prev);
+    }
+  }, [currentStepIndex, recipe.steps, completedSteps]);
+
+  const handleRepeatStep = useCallback(() => {
+    speakStep(recipe.steps[currentStepIndex], currentStepIndex);
+  }, [currentStepIndex, recipe.steps, completedSteps]);
+
+  const { isListening, toggleListening, lastTranscript } = useVoiceControl(
+    {
+      onNext: handleNextStep,
+      onPrev: handlePrevStep,
+      onRepeat: handleRepeatStep,
+      onStop: () => setIsVoiceActive(false),
+    },
+    t('madeWith').includes('❤️') ? 'fr-FR' : 'en-US'
+  );
+
+  const handleToggleVoice = async () => {
+    // @ts-ignore
+    const VoiceModule = require('@react-native-voice/voice').default;
+    if (!VoiceModule || typeof VoiceModule.start !== 'function') {
+      toast('Micro indisponible sur cet appareil', 'custom');
+      return;
+    }
+
+    if (isVoiceActive) {
+      setIsVoiceActive(false);
+    } else {
+      setIsVoiceActive(true);
+      setIsHandsFreeActive(false); // Only one "smart" mode at a time
+    }
+  };
+
+  const { startShakeDetection, stopShakeDetection } = useShakeGesture(() => {
+    handleNextStep();
+    toast(t('shakeToNext'), 'done');
+  });
+
+  useEffect(() => {
+    if (isHandsFreeActive) {
+      startShakeDetection();
+    } else {
+      stopShakeDetection();
+    }
+    return () => stopShakeDetection();
+  }, [isHandsFreeActive]);
+
+  useEffect(() => {
+    if (isVoiceActive && !isListening) {
+      toggleListening();
+    } else if (!isVoiceActive && isListening) {
+      toggleListening();
+    }
+  }, [isVoiceActive, isListening, toggleListening]);
+
+  const scaleIngredients = (ingredients: { name: string; quantity: string }[]) => {
+    if (servings === recipe.servings) return ingredients;
+    const ratio = servings / recipe.servings;
+
+    return ingredients.map((ing) => {
+      // Simple scaling for numeric quantities
+      const match = ing.quantity.match(/^(\d+(\.\d+)?)(\s.*)?$/);
+      if (match) {
+        const value = parseFloat(match[1]);
+        const scaledValue = Math.round(value * ratio * 10) / 10;
+        const unit = match[3] || '';
+        return { ...ing, quantity: `${scaledValue}${unit}` };
+      }
+      return ing;
+    });
+  };
+
+  const speakStep = (text: string, index?: number) => {
+    Speech.stop();
+    Speech.speak(text, { language: t('madeWith').includes('❤️') ? 'fr' : 'en' });
+    if (index !== undefined && !completedSteps.includes(index)) {
+      setCompletedSteps([...completedSteps, index]);
+    }
+  };
+
+  const scaledIngredients = useMemo(() => scaleIngredients(recipe.ingredients), [recipe.ingredients, servings]);
 
   const isUserCreated = userRecipes.some((r) => r.id === recipe.id);
 
@@ -222,9 +343,17 @@ export default function RecipeDetailScreen() {
               <Text style={{ fontSize: 12, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.6, textAlign: 'center' }}>
                 {t('portions')}
               </Text>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
-                {recipe.servings} {t('persons')}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <TouchableOpacity onPress={() => setServings(Math.max(1, servings - 1))}>
+                  <Ionicons name="remove-circle-outline" size={20} color={colors.accent} />
+                </TouchableOpacity>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
+                  {servings}
+                </Text>
+                <TouchableOpacity onPress={() => setServings(servings + 1)}>
+                  <Ionicons name="add-circle-outline" size={20} color={colors.accent} />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -326,20 +455,69 @@ export default function RecipeDetailScreen() {
           </View>
 
           {/* Tab Content */}
-          {activeTab === 'ingredients' ? (
-            <View style={{ marginTop: 24, gap: 24 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
-                  {t('shoppingList')}
-                </Text>
-                <View style={{ backgroundColor: colors.surface, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 9999 }}>
-                  <Text style={{ fontSize: 14, color: colors.textSecondary }}>
-                    {recipe.ingredients.length} {t('items')}
-                  </Text>
+          <View style={{ marginTop: 24, gap: 24 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
+                {activeTab === 'ingredients' ? t('shoppingList') : t('steps')}
+              </Text>
+              {activeTab === 'steps' && (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsHandsFreeActive(!isHandsFreeActive);
+                      if (!isHandsFreeActive) setIsVoiceActive(false);
+                    }}
+                    style={{
+                      backgroundColor: isHandsFreeActive ? colors.accent : colors.surface,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}>
+                    <Ionicons name="hand-right-outline" size={16} color={isHandsFreeActive ? '#FFFFFF' : colors.accent} />
+                    <Text style={{ fontSize: 12, color: isHandsFreeActive ? '#FFFFFF' : colors.accent, fontWeight: '700' }}>
+                      {t('handsFreeMode')}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleToggleVoice}
+                    style={{
+                      backgroundColor: isVoiceActive ? colors.accent : colors.surface,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 20,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}>
+                    <Ionicons name="mic-outline" size={16} color={isVoiceActive ? '#FFFFFF' : colors.accent} />
+                    <Text style={{ fontSize: 12, color: isVoiceActive ? '#FFFFFF' : colors.accent, fontWeight: '700' }}>
+                      {isVoiceActive ? t('voiceListen') : t('voiceControl')}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
+              )}
+              {activeTab === 'ingredients' && (
+                <TouchableOpacity
+                  onPress={handleAddToShopping}
+                  style={{
+                    backgroundColor: colors.accent,
+                    paddingHorizontal: 16,
+                    paddingVertical: 8,
+                    borderRadius: 20,
+                  }}>
+                  <Text style={{ fontSize: 12, color: '#FFFFFF', fontWeight: '700' }}>
+                    {t('addToShopping')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {activeTab === 'ingredients' ? (
               <View style={{ gap: 12 }}>
-                {recipe.ingredients.map((ing, index) => (
+                {scaledIngredients.map((ing, index) => (
                   <View
                     key={index}
                     style={{
@@ -370,38 +548,78 @@ export default function RecipeDetailScreen() {
                   </View>
                 ))}
               </View>
-            </View>
-          ) : (
-            <View style={{ marginTop: 24, gap: 24 }}>
-              <Text style={{ fontSize: 24, fontWeight: '700', color: colors.text }}>
-                {t('steps')}
-              </Text>
+            ) : (
               <View style={{ gap: 24 }}>
                 {recipe.steps.map((step, index) => (
-                  <View key={index} style={{ flexDirection: 'row', gap: 24 }}>
+                  <View
+                    key={index}
+                    style={{
+                      flexDirection: 'row',
+                      gap: 24,
+                      opacity: isVoiceActive && index !== currentStepIndex ? 0.3 : 1,
+                      backgroundColor: isVoiceActive && index === currentStepIndex ? colors.surface : 'transparent',
+                      padding: isVoiceActive && index === currentStepIndex ? 16 : 0,
+                      borderRadius: 24,
+                    }}>
                     <View
                       style={{
                         width: 48,
                         height: 48,
                         borderRadius: 24,
-                        backgroundColor: colors.accent,
+                        backgroundColor: completedSteps.includes(index) ? colors.green : (index === currentStepIndex && isVoiceActive ? colors.accent : colors.accent),
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}>
-                      <Text style={{ fontSize: 20, fontWeight: '800', color: '#FFFFFF' }}>
-                        {index + 1}
-                      </Text>
+                      {completedSteps.includes(index) ? (
+                        <Ionicons name="checkmark" size={24} color="#FFFFFF" />
+                      ) : (
+                        <Text style={{ fontSize: 20, fontWeight: '800', color: '#FFFFFF' }}>
+                          {index + 1}
+                        </Text>
+                      )}
                     </View>
-                    <View style={{ flex: 1, paddingTop: 8 }}>
-                      <Text style={{ fontSize: 16, color: colors.textSecondary, lineHeight: 26 }}>
+                    <View style={{ flex: 1, paddingTop: 8, gap: 8 }}>
+                      <Text style={{ 
+                        fontSize: 16, 
+                        color: completedSteps.includes(index) ? colors.textMuted : colors.textSecondary, 
+                        lineHeight: 26, 
+                        fontWeight: index === currentStepIndex && isVoiceActive ? '600' : '400',
+                        textDecorationLine: completedSteps.includes(index) ? 'line-through' : 'none',
+                        opacity: completedSteps.includes(index) ? 0.6 : 1,
+                      }}>
                         {step}
                       </Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setCurrentStepIndex(index);
+                          speakStep(step, index);
+                        }}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 6,
+                          alignSelf: 'flex-start',
+                          backgroundColor: colors.surface,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 12,
+                        }}>
+                        <Ionicons name="volume-medium-outline" size={16} color={colors.accent} />
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: colors.accent }}>Écouter</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 ))}
+                {isVoiceActive && (
+                  <View style={{ backgroundColor: colors.accent, borderRadius: 20, padding: 12, marginTop: 16, alignItems: 'center' }}>
+                    <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700', fontStyle: 'italic' }}>
+                      "{lastTranscript || 'Dites \"Suivant\", \"Retour\" ou \"Stop\"'}"
+                    </Text>
+                  </View>
+                )}
               </View>
-            </View>
-          )}
+            )}
+          </View>
 
           {/* Chef's Tips */}
           {recipe.tips && (
